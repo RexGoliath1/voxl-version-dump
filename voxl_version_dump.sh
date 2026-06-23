@@ -128,12 +128,8 @@ show_network_connections() {
   fi
 }
 
-# ── git search dirs: Linux VOXL paths + macOS home for dry-run ───────────────
-if [ $IS_MAC -eq 1 ]; then
-  GIT_SEARCH_DIRS="$HOME /usr/local/src"
-else
-  GIT_SEARCH_DIRS="/root /home /data /opt/ros /opt/modalai /usr/local/src /srv /workspace /catkin_ws"
-fi
+# ── git search dirs (Linux/VOXL only) ────────────────────────────────────────
+GIT_SEARCH_DIRS="/root /home /data /opt/ros /opt/modalai /usr/local/src /srv /workspace /catkin_ws"
 
 # ────────────────────────────────────────────────────────────────────────────
 echo "$SEP"
@@ -172,9 +168,13 @@ fi
 
 echo ""
 echo "=== GIT REPOS ON HOST FILESYSTEM ==="
+if [ $IS_MAC -eq 1 ]; then
+  echo "  (skipped on macOS — only meaningful on target device)"
+else
+
 # Only report repos whose remote URL contains keywords relevant to this device.
 # Unrelated ROS/third-party packages in the same search dirs are skipped.
-RELEVANT_PATTERN='voxl|modal|px4|brecourt|starling|qrb5165|modalai'
+RELEVANT_PATTERN='voxl|modal|px4|brecourt|starling|qrb5165'
 
 GITDIRS=""
 for d in $GIT_SEARCH_DIRS; do
@@ -207,6 +207,8 @@ else
     fi
   done
 fi
+
+fi # end IS_MAC skip
 
 echo ""
 echo "=== DOCKER ==="

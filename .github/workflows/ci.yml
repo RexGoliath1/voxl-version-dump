@@ -1,0 +1,56 @@
+name: Test voxl_version_dump.sh
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-bionic:
+    name: Ubuntu 18.04 Bionic (VOXL OS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and run
+        run: |
+          docker build -f docker/Dockerfile.bionic -t test-bionic .
+          docker run --rm test-bionic > output.txt 2>&1
+      - name: Validate output
+        run: |
+          for section in "DEVICE IDENTITY" "VOXL / MODALAI" "GIT REPOS" "DOCKER" \
+                         "RUNNING SERVICES" "FULL PROCESS LIST" "NETWORK INTERFACES" \
+                         "ACTIVE NETWORK" "MPA PIPES" "KEY BINARY FINGERPRINTS" \
+                         "DUMP COMPLETE"; do
+            grep -q "$section" output.txt || (echo "MISSING: $section" && exit 1)
+          done
+          echo "All sections present"
+      - name: Upload output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: output-bionic
+          path: output.txt
+
+  test-noble:
+    name: Ubuntu 24.04 Noble (fallback paths)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and run
+        run: |
+          docker build -f docker/Dockerfile.noble -t test-noble .
+          docker run --rm test-noble > output.txt 2>&1
+      - name: Validate output
+        run: |
+          for section in "DEVICE IDENTITY" "VOXL / MODALAI" "GIT REPOS" "DOCKER" \
+                         "RUNNING SERVICES" "FULL PROCESS LIST" "NETWORK INTERFACES" \
+                         "ACTIVE NETWORK" "MPA PIPES" "KEY BINARY FINGERPRINTS" \
+                         "DUMP COMPLETE"; do
+            grep -q "$section" output.txt || (echo "MISSING: $section" && exit 1)
+          done
+          echo "All sections present"
+      - name: Upload output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: output-noble
+          path: output.txt

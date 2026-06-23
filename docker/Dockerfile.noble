@@ -1,0 +1,9 @@
+# Minimal Ubuntu 24.04 — no extra packages installed.
+# Tests that all fallback paths in the script fire correctly
+# when tools like readelf, ss, and ip are absent.
+FROM ubuntu:24.04
+
+COPY voxl_version_dump.sh /usr/local/bin/voxl_version_dump.sh
+RUN chmod +x /usr/local/bin/voxl_version_dump.sh
+
+CMD ["sh", "/usr/local/bin/voxl_version_dump.sh"]

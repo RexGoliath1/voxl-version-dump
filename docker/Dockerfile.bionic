@@ -1,0 +1,36 @@
+# Simulates the VOXL2 runtime environment (Ubuntu 18.04 Bionic).
+# Installs the same tooling present on a real device so the script
+# exercises the full code paths rather than fallbacks.
+FROM ubuntu:18.04
+
+RUN apt-get update && apt-get install -y \
+    binutils \
+    iproute2 \
+    procps \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Stub MPA pipe structure matching a real VOXL
+RUN mkdir -p \
+    /run/mpa/tag_detections \
+    /run/mpa/mavlink_onboard \
+    /run/mpa/mavlink_from_gcs \
+    /run/mpa/mavlink_to_gcs \
+    /run/mpa/tracking_front \
+    /run/mpa/vvhub_body_wrt_local && \
+    touch /run/mpa/tag_detections/info \
+          /run/mpa/tag_detections/request \
+          /run/mpa/tag_detections/voxl-vision-hub00000001 \
+          /run/mpa/mavlink_onboard/info \
+          /run/mpa/mavlink_onboard/request \
+          /run/mpa/mavlink_onboard/voxl-vision-hub00000002 \
+          /run/mpa/mavlink_onboard/voxl-camera-server00000003
+
+# Stub /data/modalai for SKU detection
+RUN mkdir -p /data/modalai && \
+    echo "MRB-D0012-4-V2-TEST" > /data/modalai/sku.txt
+
+COPY voxl_version_dump.sh /usr/local/bin/voxl_version_dump.sh
+RUN chmod +x /usr/local/bin/voxl_version_dump.sh
+
+CMD ["sh", "/usr/local/bin/voxl_version_dump.sh"]

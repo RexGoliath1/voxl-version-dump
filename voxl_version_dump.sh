@@ -172,10 +172,6 @@ if [ $IS_MAC -eq 1 ]; then
   echo "  (skipped on macOS — only meaningful on target device)"
 else
 
-# Only report repos whose remote URL contains keywords relevant to this device.
-# Unrelated ROS/third-party packages in the same search dirs are skipped.
-RELEVANT_PATTERN='voxl|modal|px4|brecourt|starling|qrb5165'
-
 GITDIRS=""
 for d in $GIT_SEARCH_DIRS; do
   [ -d "$d" ] || continue
@@ -187,24 +183,15 @@ GITDIRS=$(echo "$GITDIRS" | tr ' ' '\n' | sed '/^$/d')
 if [ -z "$GITDIRS" ]; then
   echo "No git repos found (searched: $GIT_SEARCH_DIRS)"
 else
-  matched=0
-  skipped=0
   echo "$GITDIRS" | while read -r gitdir; do
     repodir=$(dirname "$gitdir")
-    remote=$(run_timeout 5 git -C "$repodir" remote get-url origin 2>/dev/null \
-             || run_timeout 5 git -C "$repodir" remote -v 2>/dev/null | head -1)
-    # check remote URL and repo path against relevant keywords
-    if echo "$remote $repodir" | grep -qiE "$RELEVANT_PATTERN"; then
-      echo ""
-      echo "--- Repo: $repodir ---"
-      echo "  Remote:  $remote"
-      echo "  Branch:  $(run_timeout 5 git -C "$repodir" rev-parse --abbrev-ref HEAD 2>/dev/null)"
-      echo "  HEAD:    $(run_timeout 5 git -C "$repodir" rev-parse HEAD 2>/dev/null)"
-      echo "  Subject: $(run_timeout 5 git -C "$repodir" log -1 --pretty='%s' 2>/dev/null)"
-      echo "  Date:    $(run_timeout 5 git -C "$repodir" log -1 --pretty='%ci' 2>/dev/null)"
-    else
-      echo "  (skipped unrelated repo: $repodir)"
-    fi
+    echo ""
+    echo "--- Repo: $repodir ---"
+    run_timeout 5 git -C "$repodir" remote -v 2>/dev/null || echo "  (no remotes)"
+    echo "  Branch:  $(run_timeout 5 git -C "$repodir" rev-parse --abbrev-ref HEAD 2>/dev/null)"
+    echo "  HEAD:    $(run_timeout 5 git -C "$repodir" rev-parse HEAD 2>/dev/null)"
+    echo "  Subject: $(run_timeout 5 git -C "$repodir" log -1 --pretty='%s' 2>/dev/null)"
+    echo "  Date:    $(run_timeout 5 git -C "$repodir" log -1 --pretty='%ci' 2>/dev/null)"
   done
 fi
 
